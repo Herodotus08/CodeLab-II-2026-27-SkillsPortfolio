@@ -1,39 +1,15 @@
-# Exercises
-The programming skills portfolio requires you to develop solutions to a series of coding exercises. These exercises will test your knowledge of the programming techniques introduced through the course of the module and are designed to give you freedom with the techniques you use to solve the challenges. When solving the exercises you should aim to select the techniques that are most appropriate for the task and allow you to demonstrate the breath of knowledge acquired through the module.
+# CodeLab II - Programming Skills Portfolio (Assessment 1)
 
-&nbsp;
-&nbsp;
+Completed Python and Tkinter solutions for Assessment 1, saved inside `Assessment 1 - Skills Portfolio/`.
 
-When completing the exercises you should create a new project for each one and save these to this folder. Each exercise should be appropriately named (e.g. 01-MathsQuiz) so they are easy to find. 
-&nbsp;
-&nbsp;
-You should commit changes in your repository often and use descriptive messages for these commits and ensure you are regularly pushing your code back to GitHub.
+## Exercises
+- [`01-MathsQuiz`](Assessment%201%20-%20Skills%20Portfolio/01-MathsQuiz/) - 10-question arithmetic quiz with Easy, Moderate, and Advanced levels, two-attempt scoring (+10 / +5), progress bar, best scores, and replay.
+- [`02-AlexaTellMeAJoke`](Assessment%201%20-%20Skills%20Portfolio/02-AlexaTellMeAJoke/) - Joke assistant loading `A1 - Resources/randomJokes.txt`, showing setup then punchline, non-repeating random deck, keyword filter, and favourites.
+- [`03-StudentManager`](Assessment%201%20-%20Skills%20Portfolio/03-StudentManager/) - Student record manager for `A1 - Resources/studentMarks.txt` covering all four core menu options plus all four extension tasks (sort, add, delete, and field update with file persistence).
 
-&nbsp;
-&nbsp;
-
-In addition to completing the exercises listed below you should complete the following online courses. Completion of these courses is worth 20% of the assessment marks. 
-&nbsp;
-- SoloLearn - Intermediate Python https://www.sololearn.com/en/learn/courses/python-intermediate
-- Python Intermediate Course - Available on Ultra
-&nbsp;
-
-## Marking
-This assessment is marked on the following criteria:
-### Technical Implementation (70%)
-Evaluates the validity of your solutions based on the following factors:
-- Solution successfully compiles
-- Adherence to the task requirements
-- Correct usage of programming techniques
-- Efficiency of the code
-- Implementation of advanced requirements (where relevant)
-- Correct use of coding conventions (e.g. formatting, indentation, commenting)
-### Repository Presentation (10%)
-Have you saved your exercises to the correct location and made appropriate use of commits (e.g. per task with descriptive messages)
-### Extended Learning (20%)
-Independent study is a crucial element of university study and helps solidify and extend learning. Additional marks are available for the completion of the following online courses 
-- SoloLearn - Intermediate Python https://www.sololearn.com/en/learn/courses/python-intermediate
-- Python Intermediate Course - Available on Ultra
-
-&nbsp;
-Please refer to Minerva for the full brief including marking criteria...
+## Running Each Exercise
+```bash
+python "Assessment 1 - Skills Portfolio/01-MathsQuiz/maths_quiz.py"
+python "Assessment 1 - Skills Portfolio/02-AlexaTellMeAJoke/alexa_joke.py"
+python "Assessment 1 - Skills Portfolio/03-StudentManager/student_manager.py"
+```
