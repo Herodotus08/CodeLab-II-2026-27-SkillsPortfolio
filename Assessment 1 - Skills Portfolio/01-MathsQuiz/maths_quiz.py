@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -10,9 +11,13 @@ DIFFICULTY_RANGES = {
     3: ("Advanced", 1000, 9999),
 }
 
+SCORES_FILE = Path(__file__).resolve().parent / "best_scores.txt"
+
 
 def randomInt(level):
     """Return a random integer matching the selected difficulty level."""
+    if level not in DIFFICULTY_RANGES:
+        raise ValueError("Difficulty level must be 1, 2, or 3.")
     _, low, high = DIFFICULTY_RANGES[level]
     return random.randint(low, high)
 
@@ -50,11 +55,36 @@ def get_grade(score):
     return "F"
 
 
+def load_best_scores(path=SCORES_FILE):
+    scores = {}
+    if not path.exists():
+        return scores
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if ":" in line:
+            name, value = line.split(":", 1)
+            try:
+                scores[name.strip()] = int(value.strip())
+            except ValueError:
+                pass
+    return scores
+
+
+def save_best_score(level_name, score, path=SCORES_FILE):
+    scores = load_best_scores(path)
+    if score > scores.get(level_name, -1):
+        scores[level_name] = score
+        lines = [f"{k}:{v}" for k, v in scores.items()]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return True
+    return False
+
+
 class MathsQuizApp:
-    def __init__(self, root):
+    def __init__(self, root, scores_path=SCORES_FILE):
         self.root = root
+        self.scores_path = scores_path
         self.root.title("Maths Quiz")
-        self.root.geometry("560x440")
+        self.root.geometry("600x500")
         self.root.configure(bg="#f4f6f9")
 
         self.difficulty = 1
@@ -65,6 +95,7 @@ class MathsQuizApp:
         self.num2 = 0
         self.operator = "+"
         self.expected = 0
+        self.results_log = []
 
         self.main_frame = tk.Frame(root, bg="#f4f6f9")
         self.main_frame.pack(fill="both", expand=True, padx=24, pady=20)
@@ -78,6 +109,7 @@ class MathsQuizApp:
     def displayMenu(self):
         """Show the difficulty menu before starting a quiz."""
         self.clear_screen()
+        best = load_best_scores(self.scores_path)
 
         tk.Label(
             self.main_frame,
@@ -85,34 +117,47 @@ class MathsQuizApp:
             font=("Segoe UI", 18, "bold"),
             bg="#f4f6f9",
             fg="#1f2937",
-        ).pack(pady=(10, 6))
+        ).pack(pady=(12, 6))
 
         tk.Label(
             self.main_frame,
-            text="Choose a level to begin a 10-question arithmetic quiz:",
+            text="Select a difficulty to start a 10-question quiz (10 pts 1st try, 5 pts 2nd try):",
             font=("Segoe UI", 10),
             bg="#f4f6f9",
             fg="#4b5563",
         ).pack(pady=(0, 18))
 
         options = [
-            (1, "1. Easy  (single-digit: 1 - 9)"),
-            (2, "2. Moderate  (double-digit: 10 - 99)"),
-            (3, "3. Advanced  (4-digit: 1000 - 9999)"),
+            (1, "Easy", "1. Easy  (single-digit: 1 - 9)"),
+            (2, "Moderate", "2. Moderate  (double-digit: 10 - 99)"),
+            (3, "Advanced", "3. Advanced  (4-digit: 1000 - 9999)"),
         ]
 
-        for level, label in options:
+        for level, name, label in options:
+            row = tk.Frame(self.main_frame, bg="#ffffff", bd=1, relief="solid", padx=14, pady=10)
+            row.pack(fill="x", pady=6)
+
             ttk.Button(
-                self.main_frame,
+                row,
                 text=label,
-                width=36,
+                width=34,
                 command=lambda lvl=level: self.start_quiz(lvl),
-            ).pack(pady=6, ipady=6)
+            ).pack(side="left")
+
+            best_txt = f"Best: {best[name]}/100" if name in best else "No score yet"
+            tk.Label(
+                row,
+                text=best_txt,
+                font=("Segoe UI", 9, "bold"),
+                bg="#ffffff",
+                fg="#047857" if name in best else "#6b7280",
+            ).pack(side="right", padx=8)
 
     def start_quiz(self, level):
         self.difficulty = level
         self.question_num = 0
         self.score = 0
+        self.results_log = []
         self.next_question()
 
     def next_question(self):
@@ -134,7 +179,7 @@ class MathsQuizApp:
         level_name = DIFFICULTY_RANGES[self.difficulty][0]
 
         info_row = tk.Frame(self.main_frame, bg="#f4f6f9")
-        info_row.pack(fill="x", pady=(0, 14))
+        info_row.pack(fill="x", pady=(0, 8))
 
         tk.Label(
             info_row,
@@ -153,6 +198,9 @@ class MathsQuizApp:
         )
         self.score_label.pack(side="right")
 
+        progress = ttk.Progressbar(self.main_frame, maximum=10, value=self.question_num - 1)
+        progress.pack(fill="x", pady=(0, 14))
+
         card = tk.Frame(self.main_frame, bg="#ffffff", bd=1, relief="solid", padx=24, pady=24)
         card.pack(fill="both", expand=True)
 
@@ -168,7 +216,7 @@ class MathsQuizApp:
         tk.Label(
             card,
             text=f"{self.num1} {self.operator} {self.num2} =",
-            font=("Consolas", 28, "bold"),
+            font=("Consolas", 30, "bold"),
             bg="#ffffff",
             fg="#111827",
         ).pack(pady=18)
@@ -186,26 +234,32 @@ class MathsQuizApp:
 
         self.feedback_label = tk.Label(
             card,
-            text="Type your answer and press Enter.",
+            text="Type your answer and press Enter (negative numbers are allowed).",
             font=("Segoe UI", 10),
             bg="#ffffff",
             fg="#4b5563",
         )
         self.feedback_label.pack(pady=(10, 0))
 
+        ttk.Button(self.main_frame, text="Back to Menu", command=self.displayMenu).pack(
+            anchor="w", pady=(10, 0)
+        )
+
     def check_answer(self):
         raw = self.answer_entry.get().strip()
         try:
-            # Signed integers are valid because subtraction can give negative results
+            # Allow negative values because subtraction can go below zero
             user_val = int(raw)
         except ValueError:
             self.feedback_label.config(text="Please enter a whole number.", fg="#b45309")
             return
 
         correct, points, msg = isCorrect(user_val, self.expected, self.attempt)
+        problem_text = f"{self.num1} {self.operator} {self.num2} = {self.expected}"
 
         if correct:
             self.score += points
+            self.results_log.append(f"Q{self.question_num}: {problem_text}  (+{points} pts)")
             self.score_label.config(text=f"Score: {self.score}/100")
             self.feedback_label.config(text=msg, fg="#047857")
             self.submit_btn.config(state="disabled")
@@ -217,38 +271,44 @@ class MathsQuizApp:
             self.answer_entry.delete(0, tk.END)
             self.answer_entry.focus()
         else:
+            self.results_log.append(
+                f"Q{self.question_num}: {problem_text}  (your answer: {user_val}, +0 pts)"
+            )
             self.feedback_label.config(text=msg, fg="#b91c1c")
             self.submit_btn.config(state="disabled")
             self.root.after(1000, self.next_question)
 
     def displayResults(self):
-        """Show the final score, rank, and ask if the user wants to play again."""
+        """Show the final score, rank, summary list, and replay option."""
         self.clear_screen()
+        level_name = DIFFICULTY_RANGES[self.difficulty][0]
         grade = get_grade(self.score)
+        new_best = save_best_score(level_name, self.score, self.scores_path)
+
+        heading = f"Quiz Finished - {level_name}"
+        if new_best:
+            heading += " (New Best!)"
 
         tk.Label(
             self.main_frame,
-            text="Quiz Finished!",
-            font=("Segoe UI", 20, "bold"),
+            text=heading,
+            font=("Segoe UI", 17, "bold"),
             bg="#f4f6f9",
-            fg="#111827",
-        ).pack(pady=(20, 10))
+            fg="#047857" if new_best else "#111827",
+        ).pack(pady=(6, 4))
 
         tk.Label(
             self.main_frame,
-            text=f"Final Score: {self.score} / 100",
-            font=("Segoe UI", 16, "bold"),
-            bg="#f4f6f9",
-            fg="#1d4ed8",
-        ).pack(pady=4)
-
-        tk.Label(
-            self.main_frame,
-            text=f"Rank: {grade}",
+            text=f"Final Score: {self.score} / 100   |   Rank: {grade}",
             font=("Segoe UI", 14, "bold"),
             bg="#f4f6f9",
-            fg="#047857",
-        ).pack(pady=(0, 22))
+            fg="#1d4ed8",
+        ).pack(pady=(0, 12))
+
+        review_box = tk.Listbox(self.main_frame, font=("Consolas", 9), height=11)
+        for line in self.results_log:
+            review_box.insert(tk.END, line)
+        review_box.pack(fill="both", expand=True, pady=(0, 14))
 
         btns = tk.Frame(self.main_frame, bg="#f4f6f9")
         btns.pack()
