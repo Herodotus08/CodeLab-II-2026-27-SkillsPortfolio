@@ -251,6 +251,7 @@ class MathsQuizApp:
             # Allow negative values because subtraction can go below zero
             user_val = int(raw)
         except ValueError:
+            messagebox.showwarning("Invalid Input", "Please enter a whole number.")
             self.feedback_label.config(text="Please enter a whole number.", fg="#b45309")
             return
 
